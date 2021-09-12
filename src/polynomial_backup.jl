@@ -14,24 +14,22 @@
 A Polynomial type - designed to be for polynomials with integer coefficients.
 """
 struct Polynomial
-    # terms::MutableBinaryMaxHeap{Term}   
-    terms::Array{Any,1}  
+    terms::MutableBinaryMaxHeap{Term}   
         #The terms in the heap need to satisfy:
             # Will never have terms with 0 coefficient
             # Will never have two terms with same coefficient
         #An empty terms heap means that the polynomial is zero
-    Polynomial() = new(Array{Any,1}[])
-    # Polynomial() = new(MutableBinaryMaxHeap{Term}())
+    Polynomial() = new(MutableBinaryMaxHeap{Term}())
+
     #Inner constructor
-    # Polynomial(h::MutableBinaryMaxHeap{Term}) = new(h)
-    Polynomial(h::Array{Any,1}) = new(h)
+    Polynomial(h::MutableBinaryMaxHeap{Term}) = new(h)
 end
 
 """
 Construct a polynomial with a single term.
 """
 function Polynomial(t::Term)
-    terms = Array{Any,1}([])
+    terms = MutableBinaryMaxHeap{Term}()
     t.coeff != 0 && push!(terms, t)
     return Polynomial(terms)
 end
@@ -40,12 +38,9 @@ end
 Construct a polynomial with a vector of terms.
 """
 function Polynomial(tv::Vector{Term})
-    terms = Array{Any,1}([])
+    terms = MutableBinaryMaxHeap{Term}()
     for t in tv
         t.coeff != 0 && push!(terms,t)
-    end
-    if length(tv)>1 && tv[1].degree < tv[2].degree
-        terms = reverse(terms)
     end
     return Polynomial(terms)
 end
@@ -113,7 +108,7 @@ function show(io::IO, p::Polynomial)
         print(io,"0")
     else
         n = length(p.terms)
-        for (i,t) in enumerate(p.terms)
+        for (i,t) in enumerate(extract_all!(p.terms))
             print(io, t, i != n ? " + " : "")
         end
     end
@@ -176,15 +171,9 @@ function push!(p::Polynomial, t::Term)
 end
 
 """
-Pop the trailing term out of the polynomial.
-"""
-pop!(p::Polynomial)::Term = pop!(p.terms)
-
-"""
 Pop the leading term out of the polynomial.
 """
-popfirst!(p::Polynomial)::Term = popfirst!(p.terms)
-
+pop!(p::Polynomial)::Term = pop!(p.terms)
 
 """
 Check if the polynomial is zero.

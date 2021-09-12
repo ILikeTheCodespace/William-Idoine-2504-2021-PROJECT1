@@ -9,6 +9,14 @@
 """
 Multiply two polynomials.
 """
+# function *(p1::Polynomial, p2::Polynomial)::Polynomial
+#     p_out = Polynomial()
+#     for t in p1
+#         p_out = p_out + (t * p2)
+#     end
+#     return p_out
+# end
+
 function *(p1::Polynomial, p2::Polynomial)::Polynomial
     p_out = Polynomial()
     for t in p1

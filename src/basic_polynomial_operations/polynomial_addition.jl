@@ -15,18 +15,18 @@ function +(p1::Polynomial, p2::Polynomial)::Polynomial
     while !iszero(p1) && !iszero(p2)
         t1, t2 = leading(p1), leading(p2) 
         if t1.degree == t2.degree
-            push!(p3, pop!(p1)+pop!(p2))
+            push!(p3, popfirst!(p1)+popfirst!(p2))
         elseif t1.degree < t2.degree
-            push!(p3,pop!(p2))
+            push!(p3,popfirst!(p2))
         else
-            push!(p3,pop!(p1))
+            push!(p3,popfirst!(p1))
         end
     end
     while !iszero(p1)
-        push!(p3,pop!(p1))
+        push!(p3,popfirst!(p1))
     end
     while !iszero(p2)
-        push!(p3,pop!(p2))
+        push!(p3,popfirst!(p2))
     end
     return p3
 end
