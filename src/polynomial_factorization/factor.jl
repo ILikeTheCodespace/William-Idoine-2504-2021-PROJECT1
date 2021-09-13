@@ -11,14 +11,15 @@ Factors a polynomial over the field Z_p.
 
 Returns a vector of tuples of (irreducible polynomials (mod p), multiplicity) such that their product of the list (mod p) is f. Irreducibles are fixed points on the function factor.
 """
-function factor(f::Polynomial, prime::Int)::Vector{Tuple{Polynomial,Int}}
+# function factor(f::Polynomial, prime::Int)::Vector{Tuple{Polynomial,Int}}
+function factor(f::PolynomialModP)::Vector{Tuple{Polynomial,Int}}
     #Cantor Zassenhaus factorization
 
-    f_modp = mod(f, prime)
+    f_modp = mod(f.terms, f.prime)
     degree(f_modp) ≤ 1 && return [(f_modp,1)]
 
     # make f primitive
-    ff = prim_part(f_modp)(prime)      
+    ff = prim_part(f_modp)(f.prime)      
     # @show "after prim:", ff
 
      # make f square-free

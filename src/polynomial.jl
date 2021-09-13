@@ -14,17 +14,24 @@
 A Polynomial type - designed to be for polynomials with integer coefficients.
 """
 struct Polynomial
-    # terms::MutableBinaryMaxHeap{Term}   
     terms::Array{Any,1}  
-        #The terms in the heap need to satisfy:
+        #The terms in the stack need to satisfy:
             # Will never have terms with 0 coefficient
             # Will never have two terms with same coefficient
-        #An empty terms heap means that the polynomial is zero
+        #An empty terms stack means that the polynomial is zero
     Polynomial() = new(Array{Any,1}[])
-    # Polynomial() = new(MutableBinaryMaxHeap{Term}())
     #Inner constructor
-    # Polynomial(h::MutableBinaryMaxHeap{Term}) = new(h)
     Polynomial(h::Array{Any,1}) = new(h)
+end
+
+struct PolynomialModP 
+    terms::Polynomial
+    prime::Int
+
+    #Constructor for the case where only a prime is given, initialize an empty polynomial and enforce mod(prime) conditions
+    PolynomialModP(prime::Int) = new(Polynomial(), prime)
+    #Inner constructor
+    PolynomialModP(poly::Polynomial, prime::Int) = new(poly, prime)
 end
 
 """
@@ -43,9 +50,6 @@ function Polynomial(tv::Vector{Term})
     terms = Array{Any,1}([])
     for t in tv
         t.coeff != 0 && push!(terms,t)
-    end
-    if length(tv)>1 && tv[1].degree < tv[2].degree
-        terms = reverse(terms)
     end
     return Polynomial(terms)
 end
@@ -140,7 +144,15 @@ length(p::Polynomial) = length(p.terms)
 """
 The leading term of the polynomial.
 """
-leading(p::Polynomial)::Term = isempty(p.terms) ? zero(Term) : first(p.terms) 
+#Assuming every array of polynomials given to the struct is in ascending order of the term degrees.
+leading(p::Polynomial)::Term = isempty(p.terms) ? zero(Term) : last(p.terms)
+
+"""
+The trailing term of the polynomial.
+"""
+#Assuming every array of polynomials given to the struct is in ascending order of the term degrees.
+trailing(p::Polynomial)::Term = isempty(p.terms) ? zero(Term) : first(p.terms)
+
 
 """
 Returns the coefficients of the polynomial.
