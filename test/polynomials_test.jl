@@ -50,6 +50,7 @@ end
 """
 Test division of polynomials modulo p.
 """
+## REMOVE
 function division_test_poly(;prime::Int = 101, N::Int = 10^4, seed::Int = 0)
     Random.seed!(seed)
     for _ in 1:N
@@ -87,4 +88,50 @@ function ext_euclid_test_poly(;prime::Int=101, N::Int = 10^3, seed::Int = 0)
         @assert mod(s*p1 + t*p2 - g, prime) == 0
     end
     println("ext_euclid_test_poly - PASSED")
+end
+
+"""
+Test division of polynomials modulo p using PolynomialModP data type.
+"""
+function division_test_poly_mod_p(;prime::Int = 101, N::Int = 10^4, seed::Int = 0)
+    Random.seed!(seed)
+    for _ in 1:N
+        p1 = rand(Polynomial)
+        p2 = rand(Polynomial)
+        p1mod = PolynomialModP(p1, prime)
+        p2mod = PolynomialModP(p2, prime)
+        p_prod = PolynomialModP(p1mod.terms*p2mod.terms, prime)
+        q, r = Polynomial(), Polynomial()
+        try
+            q, r = divide(p_prod, p2mod)
+            if (q, r) == (nothing,nothing)
+                println("Unlucky prime: $p1 is reduced to $(p1 % prime) modulo $prime")
+                continue
+            end
+        catch e
+            if typeof(e) == DivideError
+                @assert mod(p2mod.terms, prime) == 0
+            else
+                throw(e)
+            end
+        end
+        @assert iszero(mod(q*p2mod.terms+r - p_prod.terms, prime))
+    end
+    println("division_test_poly_mod_p - PASSED")
+end
+
+"""
+Test the extended euclid algorithm for polynomials modulo p.
+"""
+function ext_euclid_test_poly_mod_p(;prime::Int=101, N::Int = 10^3, seed::Int = 0)
+    Random.seed!(seed)
+    for _ in 1:N
+        p1 = rand(Polynomial)
+        p2 = rand(Polynomial)
+        p1mod = PolynomialModP(p1, prime)
+        p2mod = PolynomialModP(p2, prime)
+        g, s, t = extended_euclid_alg(p1mod, p2mod)
+        @assert mod(s*p1mod.terms + t*p2mod.terms - g, prime) == 0
+    end
+    println("ext_euclid_test_poly_mod_p - PASSED")
 end

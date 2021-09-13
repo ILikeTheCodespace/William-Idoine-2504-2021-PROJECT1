@@ -281,6 +281,13 @@ Warning this may not make sense if n does not divide all the coefficients of p.
 ÷(p::Polynomial,n::Int) = (prime)->Polynomial(map((pt)->((pt ÷ n)(prime)), p.terms))
 
 """
+Integer division of a polynomial mod(P) by an integer.
+
+Warning this may not make sense if n does not divide all the coefficients of p.
+"""
+÷(p::PolynomialModP,n::Int) = PolynomialModP(Polynomial(map((pt)->((pt ÷ n)(p.prime)), p.terms)), p.prime)
+
+"""
 Take the smod of a polynomial with an integer.
 """
 function mod(f::Polynomial, p::Int)::Polynomial

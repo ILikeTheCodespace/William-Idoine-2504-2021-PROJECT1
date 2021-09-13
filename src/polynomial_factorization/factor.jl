@@ -19,7 +19,51 @@ function factor(f::PolynomialModP)::Vector{Tuple{Polynomial,Int}}
     degree(f_modp) ≤ 1 && return [(f_modp,1)]
 
     # make f primitive
-    ff = prim_part(f_modp)(f.prime)      
+    ff = PolynomialModP(prim_part(f_modp)(f.prime), f.prime)      
+    # @show "after prim:", ff
+
+    ff_der = PolynomialModP(derivative(prim_part(f_modp)(f.prime)), f.prime)      
+
+     # make f square-free
+    squares_poly = gcd(f, ff_der)
+    ff = PolynomialModP(ff ÷ PolynomialModP(squares_poly, f.prime), f.prime)
+    # @show "after square free:", ff
+
+    # make f monic
+    old_coeff = leading(ff.terms).coeff
+    ff = ff ÷ old_coeff       
+    # @show "after monic:", ff
+
+    dds = dd_factor(ff.terms, f.prime)
+
+    ret_val = Tuple{Polynomial,Int}[]
+
+    for (k,dd) in enumerate(dds)
+        sp = dd_split(dd, k, f.prime)
+        sp = map((p)->(p ÷ leading(p).coeff)(f.prime),sp) #makes the polynomials inside the list sp, monic
+        for mp in sp
+            push!(ret_val, (mp, multiplicity(f_modp,mp,f.prime)) )
+        end
+    end
+
+    #Append the leading coefficient as well
+    push!(ret_val, (leading(f_modp).coeff* one(Polynomial), 1) )
+
+    return ret_val
+end
+
+"""
+Factors a polynomial over the field Z_p.
+Returns a vector of tuples of (irreducible polynomials (mod p), multiplicity) such that their product of the list (mod p) is f. Irreducibles are fixed points on the function factor.
+"""
+function factor(f::Polynomial, prime::Int)::Vector{Tuple{Polynomial,Int}}
+    #Cantor Zassenhaus factorization
+
+    f_modp = mod(f, prime)
+    degree(f_modp) ≤ 1 && return [(f_modp,1)]
+
+    # make f primitive
+    ff = prim_part(f_modp)(prime)      
     # @show "after prim:", ff
 
      # make f square-free
@@ -49,6 +93,7 @@ function factor(f::PolynomialModP)::Vector{Tuple{Polynomial,Int}}
 
     return ret_val
 end
+
 
 """
 Expand a factorization.

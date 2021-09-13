@@ -33,6 +33,13 @@ function divide(num::Polynomial, den::Polynomial)
     return division_function
 end
 
+"""  Modular algorithm.
+f divide by g
+
+f = q*g + r
+
+p is a prime
+"""
 function divide(num::PolynomialModP, den::PolynomialModP)
     @assert num.prime == den.prime "Both polynomials must share the same prime divisor"
     f, g = mod(num.terms,num.prime), mod(den.terms,den.prime)
@@ -55,6 +62,7 @@ end
 The quotient from polynomial division. Returns a function of an integer.
 """
 ÷(num::Polynomial, den::Polynomial)  = (p::Int) -> first(divide(num,den)(p))
+÷(num::PolynomialModP, den::PolynomialModP)  = first(divide(num,den))
 
 """
 The remainder from polynomial division. Returns a function of an integer.

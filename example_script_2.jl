@@ -17,8 +17,8 @@ p2 = x^5 + x^3
 p1mod = PolynomialModP(p1, 5)
 p2mod = PolynomialModP(p2, 5)
 
-@show gcd(p1,p2,5)
-@show gcd(p1mod, p2mod)
+@show factor(p1,5)
+@show factor(p1mod)
 # p3 = x^8 + x^5
 # p1+p2
 # p1 * p2 + p3

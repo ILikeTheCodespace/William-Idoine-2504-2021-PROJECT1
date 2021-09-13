@@ -22,11 +22,14 @@ include("polynomials_test.jl")
 # TAKEN OUT A TEST FOR TIME PURPOSES
 # prod_test_poly()
 # prod_derivative_test_poly()
-ext_euclid_test_poly()
-division_test_poly()
+# ext_euclid_test_poly()
+# division_test_poly()
+ext_euclid_test_poly_mod_p()
+division_test_poly_mod_p()
 
 ####
 # Execute unit tests for polynomial factorization
 ####
 include("factorization_test.jl")
 # factor_test_poly()
+factor_test_poly_mod_p()
