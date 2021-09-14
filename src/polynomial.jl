@@ -123,6 +123,18 @@ function show(io::IO, p::Polynomial)
     end
 end
 
+function show(io::IO, p::PolynomialModP)
+    p = deepcopy(p.terms)
+    if iszero(p)
+        print(io."0")
+    else
+        n = length(p.terms)
+        for (i,t) in enumerate(p.terms)
+            print(io, t, i != n ? " + " : "")
+        end
+    end
+end
+
 ##############################################
 # Iteration over the terms of the polynomial #
 ##############################################
@@ -301,12 +313,25 @@ end
 """
 Power of a polynomial mod prime.
 """
-function pow_mod(p::Polynomial, n::Int, prime::Int)
+# function pow_mod(p::Polynomial, n::Int, prime::Int)
+#     n < 0 && error("No negative power")
+#     out = one(p)
+#     for _ in 1:n
+#         out *= p
+#         out = mod(out, prime)
+#     end
+#     return out
+# end
+
+"""
+Power of a polynomial mod prime.
+"""
+function ^(p::PolynomialModP, n::Int)
     n < 0 && error("No negative power")
-    out = one(p)
+    out = one(p.terms)
     for _ in 1:n
-        out *= p
-        out = mod(out, prime)
+        out *= p.terms
+        out = mod(out, p.prime)
     end
     return out
 end
