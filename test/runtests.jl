@@ -29,4 +29,10 @@ include("polynomials_test.jl")
 # Execute unit tests for polynomial factorization
 ####
 include("factorization_test.jl")
-factor_test_poly_mod_p()
+# factor_test_poly_mod_p()
+
+###################################
+# Benchmark tests for polynomials #
+###################################
+include("polynomials_test.jl")
+prod_benchmark()

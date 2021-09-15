@@ -32,6 +32,44 @@ function prod_test_poly(;N::Int = 10^3, N_prods::Int = 20, seed::Int = 0)
 end
 
 """
+Benchmark multiplication 
+"""
+function prod_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
+    Random.seed!(seed)
+    p1 = 0
+    p2 = 0
+    for i in 1:N
+        x = x_poly()
+        p1 += rand(1:100)*x^(rand(1:100))
+        p2 += rand(1:100)*x^(rand(1:100))
+        if i%100 == 0
+            print("Time taken to multiply two polynomials with $i terms:")
+            @time prod = p1*p2
+            @assert leading(prod) == leading(p1)*leading(p2)
+        end
+    end
+    println("prod_benchmark COMPLETED")
+end
+
+function crt_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
+    Random.seed!(seed)
+    p1 = 0
+    p2 = 0
+    for i in 1:N
+        x = x_poly()
+        p1 += rand(1:100)*x^(rand(1:100))
+        p2 += rand(1:100)*x^(rand(1:100))
+        if i%100 == 0
+            print("Time taken to multiply two polynomials with $i terms:")
+            @time prod = p1*p2
+            @assert leading(prod) == leading(p1)*leading(p2)
+        end
+    end
+    println("prod_benchmark COMPLETED")
+end
+
+
+"""
 Test derivative of polynomials (as well as product).
 """
 function prod_derivative_test_poly(;N::Int = 10^2,  seed::Int = 0)

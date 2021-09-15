@@ -14,11 +14,15 @@ x = x_poly()
 p1 = x^2 + x^5
 p2 = x^5 + x^3
 
+# Class example
+p1 = 3x + -4
+p2 = 6x + 5
+
 p1mod = PolynomialModP(p1, 5)
 p2mod = PolynomialModP(p2, 5)
 
-@show factor(p1,5)
-@show factor(p1mod)
+@show p1 * p2
+@show CRT(p1mod, p2mod)
 # p3 = x^8 + x^5
 # p1+p2
 # p1 * p2 + p3
