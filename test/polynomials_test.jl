@@ -35,6 +35,7 @@ end
 Benchmark multiplication 
 """
 function prod_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
+    println("Begin prod_benchmark: Demonstrating performance of polynomial multiplication algorithm")
     Random.seed!(seed)
     p1 = 0
     p2 = 0
@@ -48,24 +49,53 @@ function prod_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
             @assert leading(prod) == leading(p1)*leading(p2)
         end
     end
-    println("prod_benchmark COMPLETED")
+    println("prod_benchmark COMPLETED\n")
+end
+
+function prod_modP_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
+    println("Begin prod_modP_benchmark: Demonstrating performance of polynomial multiplication algorithm in modulo P")
+    Random.seed!(seed)
+    sample_primes_array = [3,5,7,11,13,17,19]
+    p1 = 0
+    p2 = 0
+    for i in 1:N
+        x = x_poly()
+        rand_prime = rand(sample_primes_array)
+        p1 += rand(1:100)*x^(rand(1:100))
+        p2 += rand(1:100)*x^(rand(1:100))
+        p1mod = PolynomialModP(p1, rand_prime)
+        p2mod = PolynomialModP(p2, rand_prime)
+        if i%100 == 0
+            print("Time taken to multiply two polynomials with $i terms:")
+            @time prod = p1mod*p2mod
+            @assert leading(prod) == leading(mod((mod(p1mod.terms, rand_prime) * mod(p2mod.terms, rand_prime)), rand_prime))
+        end
+    end
+    println("prod_modP_benchmark COMPLETED\n")
 end
 
 function crt_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
+    println("Begin crt_benchmark: Demonstrating performance of polynomial multiplication using the Chinese Remainder Theorem")
     Random.seed!(seed)
+    sample_primes_array = [3,5,7,11,13,17,19]
     p1 = 0
     p2 = 0
     for i in 1:N
         x = x_poly()
+        rand_prime = rand(sample_primes_array)
         p1 += rand(1:100)*x^(rand(1:100))
         p2 += rand(1:100)*x^(rand(1:100))
+        p1mod = PolynomialModP(p1, rand_prime)
+        p2mod = PolynomialModP(p2, rand_prime)
         if i%100 == 0
             print("Time taken to multiply two polynomials with $i terms:")
-            @time prod = p1*p2
-            @assert leading(prod) == leading(p1)*leading(p2)
+            @time prod = CRT(p1mod, p2mod)
+            # The number 105 is chosen below as the implementation of the CRT uses the primes 3,5 and 7 to calculate the product 
+            @assert leading(prod).coeff == smod(leading(p1mod.terms*p2mod.terms).coeff, 105)
+            @assert leading(prod).degree == leading(p1mod.terms*p2mod.terms).degree
         end
     end
-    println("prod_benchmark COMPLETED")
+    println("crt_benchmark COMPLETED\n")
 end
 
 

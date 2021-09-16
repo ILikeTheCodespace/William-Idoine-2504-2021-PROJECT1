@@ -18,17 +18,17 @@ function *(p1::Polynomial, p2::Polynomial)::Polynomial
     return p_out
 end
 
-# """
-# Multiply two polynomials.
-# """
-# function *(p1::PolynomialModP, p2::PolynomialModP)::Polynomial
-#     @assert p1.prime == p2.prime
-#     p_out = Polynomial()
-#     for t in p1.terms
-#         p_out = p_out + (t * p2.terms)
-#     end
-#     return mod(p_out, p1.prime)
-# end
+"""
+Multiply two polynomials modulo P.
+"""
+function *(p1::PolynomialModP, p2::PolynomialModP)::Polynomial
+    @assert p1.prime == p2.prime "Primes must be the same"
+    p_out = Polynomial()
+    for t in p1.terms
+        p_out = p_out + (t * p2.terms)
+    end
+    return mod(p_out, p1.prime)
+end
 
 
 """
@@ -43,40 +43,33 @@ function ^(p::Polynomial, n::Int)
     return out
 end
 
-# function CRT(p1::PolynomialModP, p2::Vararg{PolynomialModP, N} where N)   
-#     u = [p1.terms]
-#     m = [p1.prime]
-#     for i in 1:length(p2)
-#         push!(u, p2[i].terms)
-#         push!(m, p2[i].prime)
-#     end
-#     v = Vector{Polynomial}(undef,length(u))
-
-#     v[1] = u[1]
-#     for i in 1:length(p2)
-#         token = u[i+1]
-#         for j in 1:i
-#             token -= v[j]*mult_vec_el_up_to(m, j-1)
-#         end
-#         v[i+1] = mod(token*inverse_mod(mult_vec_el_up_to(m, i) , m[i+1]), m[i+1])
-#         # v[i+1] = token*inverse_mod(mult_vec_el_up_to(m, i) , m[i+1]) % m[i+1] 
-#     end
-
-#     sol = 0
-#     for i in 1:length(u)
-#         sol += v[i]*mult_vec_el_up_to(m, i-1)
-#     end
-#     if mod(sol,m[1]) == u[1]
-#         if mod(sol, m[2]) == u[2]
-#             println("HAHAYES!")
-#         end
-#     end
-#     return sol
-# end
-
 function CRT(p1::PolynomialModP, p2::Vararg{PolynomialModP, N} where N)   
-    prods = Vector{Polynomial}(undef,3)
+    x = x_poly()
+    function inner_CRT_smod(u::Vector{Int64}, m::Vector{Int64}) 
+        @assert length(u) == length(m) "Number of elements in input vectors not equal"
+        v = Vector{Int}(undef,length(m))
+        v[1] = u[1]
+        for i in 1:length(m)-1
+            token = u[i+1]
+            for j in 1:i
+                token -= v[j]*mult_vec_el_up_to(m, j-1)
+            end
+            v[i+1] = mod(token*inverse_mod(mult_vec_el_up_to(m, i) , m[i+1]), m[i+1])
+        end
+
+        sol = 0
+        for i in 1:length(u)
+            sol += v[i]*mult_vec_el_up_to(m, i-1)
+        end
+        for i in 1:length(m)
+            @assert sol % m[i] == u[i] "Did not find solution, terminating now." 
+        end
+        return smod(sol, prod(m))
+    end
+
     m = [3,5,7]
+    prods = Vector{Polynomial}(undef,length(m))
+
     for i in 1:length(m)
         prod = mod(p1.terms, m[i])
         for arg in p2
@@ -85,12 +78,28 @@ function CRT(p1::PolynomialModP, p2::Vararg{PolynomialModP, N} where N)
         prods[i] = mod(prod, m[i])
     end
 
-    # SO I NOW HAV PRODUCTS IN THE ARRAY PRODS IN THIS FORM, TOMORROW I NEED TO GET THE COEFFS OUT OF THEM AND DO THE FUNNY CRT ON THEM. https://gyazo.com/f28d7371de813b0700907f5a4f88bfe0 
+    poly_data = vec([vec(zeros(Int, 1, maximum(degree, prods)+1)) for _ in 1:1, _ in 1:length(m)])
 
-    v = Vector{Int}(undef,3)
-    v[1] = u[1]
+    for i in 1:length(prods)
+        for j in prods[i]
+            poly_data[i][j.degree + 1] = j.coeff
+        end
+    end
+
+    output_poly = 0
+    for i in 1:maximum(degree, prods)+1
+        CRT_input = vec(zeros(Int, 1, length(m)))
+        for j in 1:length(m)
+            CRT_input[j] = poly_data[j][i]
+        end
+        output_poly += inner_CRT_smod(CRT_input, m)x^(i-1)
+    end
+
+    # for i in 1:length(poly_data)
+    #     output_poly += inner_CRT_smod(poly_data[i], m)x^(i-1)
+    # end
+    return output_poly
 end
-
 
 function mult_vec_el_up_to(arr::Vector, el::Int)
     @assert length(arr) > 0 "Array must contain at least 1 element." 
@@ -102,5 +111,7 @@ function i_ext_euclid_alg(a,b)
     g, s, t = i_ext_euclid_alg(b % a, a)
     return g, t - (b ÷ a)*s, s
 end
+
+smod(a::Int,m::Int)::Int = mod(a,m) > m ÷ 2 ?  mod(a,m) - m : mod(a,m) 
 
 inverse_mod(a,m) = mod(i_ext_euclid_alg(a,m)[2],m);

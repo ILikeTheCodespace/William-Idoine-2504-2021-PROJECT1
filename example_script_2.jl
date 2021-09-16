@@ -1,5 +1,20 @@
 include("poly_factorization_project.jl")
 
+    # SO I NOW HAV PRODUCTS IN THE ARRAY PRODS IN THIS FORM, TOMORROW I NEED TO GET THE COEFFS OUT OF THEM AND DO THE FUNNY CRT ON THEM. https://gyazo.com/f28d7371de813b0700907f5a4f88bfe0 
+
+    # poly_data = fill(zeros(Int, 1, maximum(degree, prods)+1), (1, length(m)))
+    #WORKING
+    # poly_data = Vector{Vector{Int}}(undef,length(m))
+
+    # for i in 1:length(prods)
+    #     poly_data[i] = vec(zeros(Int, 1, maximum(degree, prods)+1))
+    #     # poly_data[i] = Vector{Int}(0, maximum(degree, prods)+1)
+    #     for j in prods[i]
+    #         poly_data[i][j.degree + 1] = j.coeff
+    #     end
+    # end
+    #WORKING FOR CRT
+
 """
 Takes some input polynomial (of type Polynomial) and converts it to a string whilst also simplifying it to make it more human readable.
 """

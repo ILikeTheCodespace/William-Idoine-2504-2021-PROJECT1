@@ -35,4 +35,6 @@ include("factorization_test.jl")
 # Benchmark tests for polynomials #
 ###################################
 include("polynomials_test.jl")
-prod_benchmark()
+# prod_benchmark()
+# prod_modP_benchmark()
+crt_benchmark()
