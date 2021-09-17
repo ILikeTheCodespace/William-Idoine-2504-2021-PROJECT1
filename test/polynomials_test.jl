@@ -32,6 +32,59 @@ function prod_test_poly(;N::Int = 10^3, N_prods::Int = 20, seed::Int = 0)
 end
 
 """
+Test power of polynomial/integer mod P
+"""
+function power_test_poly(;N::Int = 10, seed::Int = 0)
+    sample_primes_array = [3,5,7,11,13,17,19]
+    Random.seed!(seed)
+    x = x_poly()
+    print("Proceeding with power tests ~ [")
+    for i in 1:N
+        exponent = rand(10:20)
+        rand_prime = rand(sample_primes_array)
+        p1 = rand(Polynomial)
+        out = 1
+        for i in 1:exponent
+            out = mod(out*p1, rand_prime)
+        end
+        if ^(p1, exponent, rand_prime) - out != 0
+            println("--- TEST FAILED ---")
+            break
+        end 
+        print("-")
+    end
+    print("]\n")
+    println("power_test_poly - COMPLETED\n")
+end
+
+"""
+Test power of polynomial mod P
+"""
+function power_test_poly_modp(;N::Int = 10, seed::Int = 0)
+    sample_primes_array = [3,5,7,11,13,17,19]
+    Random.seed!(seed)
+    x = x_poly()
+    print("Proceeding with power tests using PolynomialModP data type ~ [")
+    for i in 1:N
+        exponent = rand(10:20)
+        rand_prime = rand(sample_primes_array)
+        p1 = rand(Polynomial)
+        p1mod = PolynomialModP(p1, rand_prime)
+        out = 1
+        for i in 1:exponent
+            out = mod(out*p1mod.terms, p1mod.prime)
+        end
+        if ^(p1mod, exponent) - out != 0
+            println("--- TEST FAILED ---")
+            break
+        end 
+        print("-")
+    end
+    print("]\n")
+    println("power_test_poly_modp - COMPLETED\n")
+end
+
+"""
 Benchmark multiplication 
 """
 function prod_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)

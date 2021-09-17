@@ -21,9 +21,11 @@ include("integers_test.jl")
 include("polynomials_test.jl")
 # TAKEN OUT A TEST FOR TIME PURPOSES
 # prod_test_poly()
-# prod_derivative_test_poly()
-# ext_euclid_test_poly_mod_p()
-# division_test_poly_mod_p()
+prod_derivative_test_poly()
+ext_euclid_test_poly_mod_p()
+division_test_poly_mod_p()
+power_test_poly()
+power_test_poly_modp()
 
 ####
 # Execute unit tests for polynomial factorization
@@ -37,4 +39,4 @@ include("factorization_test.jl")
 include("polynomials_test.jl")
 # prod_benchmark()
 # prod_modP_benchmark()
-crt_benchmark()
+# crt_benchmark()

@@ -43,6 +43,34 @@ function ^(p::Polynomial, n::Int)
     return out
 end
 
+# function ^(p, n::Int, prime::Int)
+#     n < 0 && error("No negative power")
+#     out = one(p)
+#     binary_arr = digits(n, base=2)
+#     length(binary_arr) == 1 && return mod(p*binary_arr[1], prime)
+#     for i in 1:length(binary_arr)
+#         binary_arr[i] == 1 ? out = mod(out*p, prime) : out *= 1
+#         p = mod(p*p, prime)
+#     end
+#     return out
+# end
+
+# I decided to keep the ^ as a general function and not restrict it to only polynomials since this also works with raising integers and other types to a power n mod p.
+function ^(p, n::Int, prime::Int)
+    n < 0 && error("No negative power")
+    out = one(p)
+    binary_arr = digits(n, base=2)
+    length(binary_arr) == 1 && return p*binary_arr[1]
+    p = mod(p, prime)
+    for i in 1:length(binary_arr)
+        binary_arr[i] == 1 ? out = mod(out*p, prime) : out *= 1
+        p = mod(p*p, prime)
+    end
+    return mod(out, prime)
+end
+
+^(p::PolynomialModP, n::Int) = ^(p.terms, n, p.prime)
+
 function CRT(p1::PolynomialModP, p2::Vararg{PolynomialModP, N} where N)   
     x = x_poly()
     function inner_CRT_smod(u::Vector{Int64}, m::Vector{Int64}) 
