@@ -127,14 +127,15 @@ end
 Show a polynomial Modulo P.
 """
 function show(io::IO, p::PolynomialModP)
-    p = deepcopy(p.terms)
-    if iszero(p)
+    input_poly = deepcopy(p.terms)
+    if iszero(input_poly)
         print(io."0")
     else
-        n = length(p.terms)
-        for (i,t) in enumerate(p.terms)
+        n = length(input_poly.terms)
+        for (i,t) in enumerate(input_poly.terms)
             print(io, t, i != n ? " + " : "")
         end
+        print(" mod ", p.prime)
     end
 end
 
@@ -248,7 +249,7 @@ prim_part(p::Polynomial) = p ÷ content(p)
 """
 A square free polynomial.
 """
-square_free(p::Polynomial, prime::Int)::Polynomial = (p ÷ gcd(p,derivative(p),prime))(prime)
+square_free(p::Polynomial, prime::Int)::Polynomial = (PolynomialModP(p, prime) ÷ PolynomialModP(gcd(PolynomialModP(p, prime),PolynomialModP(derivative(p), prime)), prime))
 
 #################################
 # Queries about two polynomials #
