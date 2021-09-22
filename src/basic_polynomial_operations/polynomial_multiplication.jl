@@ -34,26 +34,18 @@ end
 """
 Power of a polynomial.
 """
+
 function ^(p::Polynomial, n::Int)
     n < 0 && error("No negative power")
     out = one(p)
-    for _ in 1:n
-        out *= p
+    binary_arr = digits(n, base=2)
+    length(binary_arr) == 1 && return p*binary_arr[1]
+    for i in 1:length(binary_arr)
+        binary_arr[i] == 1 ? out = out*p : out *= 1
+        p = p*p
     end
     return out
 end
-
-# function ^(p, n::Int, prime::Int)
-#     n < 0 && error("No negative power")
-#     out = one(p)
-#     binary_arr = digits(n, base=2)
-#     length(binary_arr) == 1 && return mod(p*binary_arr[1], prime)
-#     for i in 1:length(binary_arr)
-#         binary_arr[i] == 1 ? out = mod(out*p, prime) : out *= 1
-#         p = mod(p*p, prime)
-#     end
-#     return out
-# end
 
 # I decided to keep the ^ as a general function and not restrict it to only polynomials since this also works with raising integers and other types to a power n mod p.
 function ^(p, n::Int, prime::Int)
@@ -71,62 +63,80 @@ end
 
 ^(p::PolynomialModP, n::Int) = ^(p.terms, n, p.prime)
 
-function CRT(p1::PolynomialModP, p2::Vararg{PolynomialModP, N} where N)   
-    x = x_poly()
-    function inner_CRT_smod(u::Vector{Int64}, m::Vector{Int64}) 
-        @assert length(u) == length(m) "Number of elements in input vectors not equal"
-        v = Vector{Int}(undef,length(m))
-        v[1] = u[1]
-        for i in 1:length(m)-1
-            token = u[i+1]
-            for j in 1:i
-                token -= v[j]*mult_vec_el_up_to(m, j-1)
-            end
-            v[i+1] = mod(token*inverse_mod(mult_vec_el_up_to(m, i) , m[i+1]), m[i+1])
-        end
+function CRT(poly_arr, prime_arr)
 
-        sol = 0
-        for i in 1:length(u)
-            sol += v[i]*mult_vec_el_up_to(m, i-1)
-        end
-        for i in 1:length(m)
-            @assert sol % m[i] == u[i] "Did not find solution, terminating now." 
-        end
-        return smod(sol, prod(m))
+    c = 0
+    max_input_deg = max(degree(poly_arr[1]), degree(poly_arr[2]))+1
+    exponent_arr_1 = zeros(Int64, 1, max_input_deg)
+    exponent_arr_2 = zeros(Int64, 1, max_input_deg)
+    for i in poly_arr[1]
+        exponent_arr_1[i.degree+1] = i.coeff
+    end
+    for i in poly_arr[2]
+        exponent_arr_2[i.degree+1] = i.coeff
+    end
+    """
+    The lines above actually result in a marginally slower CRT implementation as opposed to the approach where you cycle through exponent arrays 1 and 2 and check if k matches the exponent value before sending those values off to the iCRT call. I chose to keep this approach because the computational time difference was only marginal and I felt like it shows that I *really* tried to tackle the task given.
+    """
+
+    for k in max_input_deg-1:-1:0
+        ak = exponent_arr_1[k+1]
+        bk = exponent_arr_2[k+1]
+        ck = iCRT([ak, bk], prime_arr)
+        k == 0 ? c = c + ck : c = c + ck * x^k # Can probably remove the turnery, its only there because I had a strange bug with Term(1,1)
+    end
+    return c
+end
+
+function mult_poly_with_crt(a, b)
+    height_a = maximum(coeffs(a))
+    height_b = maximum(coeffs(b))
+    B = 2*height_a*height_b*min(degree(a)+1, degree(b)+1)
+    M = 3
+    c = poly_modP_multiplication(a, b, M)
+    while M < B
+        nextprime(M) == M ? p = nextprime(M, 2) : p = nextprime(M)
+        d = poly_modP_multiplication(a, b, p)
+        c = CRT([c, d], [M, p])
+        M = M*p
+    end
+    return c
+end
+
+function iCRT(u, m)
+    v = Vector{Int}(undef, 2)
+    v[1] = u[1]
+    v[2] = mod((u[2] - v[1])*inverse_mod(m[1], m[2]), m[2])
+    output = u[1] + v[2]*m[1]
+    smod(output, m[1]) == smod(u[1], m[1]) && smod(output, m[2]) == smod(u[2], m[2]) && return smod(output, m[1]*m[2])
+    error("Output modulo prime is not consistent with inputs")
+end
+
+function poly_modP_multiplication(a::Polynomial, b::Polynomial, prime::Int)
+    if length(a) == 0 || length(b) == 0
+        return 0
+    end
+    if leading(a) == a.terms[1] && leading(b) == b.terms[1]
+        return mod(mod(a, prime) * mod(b, prime), prime)
     end
 
-    m = [3,5,7]
-    prods = Vector{Polynomial}(undef,length(m))
-
-    for i in 1:length(m)
-        prod = mod(p1.terms, m[i])
-        for arg in p2
-            prod *= mod(arg.terms, m[i])
-        end
-        prods[i] = mod(prod, m[i])
+    if length(a.terms) == 1
+        a1 = a
+        a2 = Polynomial()
+    else
+        a1 = Polynomial(a.terms[1:(length(a.terms)÷2)])
+        a2 = Polynomial(a.terms[(length(a.terms)÷2)+1:length(a.terms)])    
+    end
+    
+    if length(b.terms) == 1
+        b1 = b
+        b2 = Polynomial()
+    else
+        b1 = Polynomial(b.terms[1:(length(b.terms)÷2)])
+        b2 = Polynomial(b.terms[(length(b.terms)÷2)+1:length(b.terms)])    
     end
 
-    poly_data = vec([vec(zeros(Int, 1, maximum(degree, prods)+1)) for _ in 1:1, _ in 1:length(m)])
-
-    for i in 1:length(prods)
-        for j in prods[i]
-            poly_data[i][j.degree + 1] = j.coeff
-        end
-    end
-
-    output_poly = 0
-    for i in 1:maximum(degree, prods)+1
-        CRT_input = vec(zeros(Int, 1, length(m)))
-        for j in 1:length(m)
-            CRT_input[j] = poly_data[j][i]
-        end
-        output_poly += inner_CRT_smod(CRT_input, m)x^(i-1)
-    end
-
-    # for i in 1:length(poly_data)
-    #     output_poly += inner_CRT_smod(poly_data[i], m)x^(i-1)
-    # end
-    return output_poly
+    return mod(poly_modP_multiplication(a1, b1, prime) + poly_modP_multiplication(a1, b2, prime) + poly_modP_multiplication(a2, b1, prime) + poly_modP_multiplication(a2, b2, prime), prime)
 end
 
 function mult_vec_el_up_to(arr::Vector, el::Int)

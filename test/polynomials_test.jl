@@ -10,7 +10,7 @@
 """
 Test product of polynomials.
 """
-function prod_test_poly(;N::Int = 10^3, N_prods::Int = 20, seed::Int = 0)
+function prod_test_poly(;N::Int = 10, N_prods::Int = 20, seed::Int = 0)
     Random.seed!(seed)
     for _ in 1:N
         p1 = rand(Polynomial)
@@ -29,6 +29,36 @@ function prod_test_poly(;N::Int = 10^3, N_prods::Int = 20, seed::Int = 0)
         end
     end
     println("prod_test_poly - PASSED")
+end
+
+"""
+Test product of polynomials modulo P.
+"""
+function prod_test_poly_mod_p(;N::Int = 10, N_prods::Int = 20, seed::Int = 0)
+    Random.seed!(seed)
+    sample_primes_array = [3,5,7,11,13,17,19]
+    for _ in 1:N
+        rand_prime = rand(sample_primes_array)
+        p1 = rand(Polynomial)
+        p2 = rand(Polynomial)
+        p1mod = PolynomialModP(p1, rand_prime)
+        p2mod = PolynomialModP(p2, rand_prime)
+        prod = p1mod*p2mod
+        @assert mod(leading(prod), rand_prime) == leading(mod(p1mod.terms*p2mod.terms, rand_prime))
+    end
+
+    for _ in 1:N
+        rand_prime = rand(sample_primes_array)
+        p_base = PolynomialModP(Polynomial(Term(1,0)), rand_prime)
+        for _ in 1:N_prods
+            p = PolynomialModP(rand(Polynomial), rand_prime)
+            prod = p_base*p
+            prod = PolynomialModP(prod, rand_prime)
+            @assert leading(prod.terms) == leading(mod(p_base.terms*p.terms, rand_prime))
+            p_base = prod
+        end
+    end
+    println("prod_test_poly_mod_p - PASSED")
 end
 
 """
@@ -87,16 +117,16 @@ end
 """
 Benchmark multiplication 
 """
-function prod_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
+function prod_benchmark(;N::Int = 50, seed::Int = 0)
     println("Begin prod_benchmark: Demonstrating performance of polynomial multiplication algorithm")
     Random.seed!(seed)
     p1 = 0
     p2 = 0
+    x = x_poly()
     for i in 1:N
-        x = x_poly()
-        p1 += rand(1:100)*x^(rand(1:100))
-        p2 += rand(1:100)*x^(rand(1:100))
-        if i%100 == 0
+        p1 += rand(1:N)*x^(i)
+        p2 += rand(1:N)*x^(i)
+        if i%10 == 0
             print("Time taken to multiply two polynomials with $i terms:")
             @time prod = p1*p2
             @assert leading(prod) == leading(p1)*leading(p2)
@@ -105,20 +135,20 @@ function prod_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
     println("prod_benchmark COMPLETED\n")
 end
 
-function prod_modP_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
+function prod_modP_benchmark(;N::Int = 50, seed::Int = 0)
     println("Begin prod_modP_benchmark: Demonstrating performance of polynomial multiplication algorithm in modulo P")
     Random.seed!(seed)
     sample_primes_array = [3,5,7,11,13,17,19]
     p1 = 0
     p2 = 0
+    x = x_poly()
     for i in 1:N
-        x = x_poly()
         rand_prime = rand(sample_primes_array)
-        p1 += rand(1:100)*x^(rand(1:100))
-        p2 += rand(1:100)*x^(rand(1:100))
+        p1 += rand(1:N)*x^(i)
+        p2 += rand(1:N)*x^(i)
         p1mod = PolynomialModP(p1, rand_prime)
         p2mod = PolynomialModP(p2, rand_prime)
-        if i%100 == 0
+        if i%10 == 0
             print("Time taken to multiply two polynomials with $i terms:")
             @time prod = p1mod*p2mod
             @assert leading(prod) == leading(mod((mod(p1mod.terms, rand_prime) * mod(p2mod.terms, rand_prime)), rand_prime))
@@ -127,25 +157,23 @@ function prod_modP_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
     println("prod_modP_benchmark COMPLETED\n")
 end
 
-function crt_benchmark(;N::Int = 500, N_prods::Int = 20, seed::Int = 0)
+function crt_benchmark(;N::Int = 50, seed::Int = 0)
     println("Begin crt_benchmark: Demonstrating performance of polynomial multiplication using the Chinese Remainder Theorem")
     Random.seed!(seed)
     sample_primes_array = [3,5,7,11,13,17,19]
     p1 = 0
     p2 = 0
+    x = x_poly()
     for i in 1:N
         x = x_poly()
         rand_prime = rand(sample_primes_array)
-        p1 += rand(1:100)*x^(rand(1:100))
-        p2 += rand(1:100)*x^(rand(1:100))
-        p1mod = PolynomialModP(p1, rand_prime)
-        p2mod = PolynomialModP(p2, rand_prime)
-        if i%100 == 0
+        p1 += rand(1:N)*x^(i)
+        p2 += rand(1:N)*x^(i)
+        if i%10 == 0
             print("Time taken to multiply two polynomials with $i terms:")
-            @time prod = CRT(p1mod, p2mod)
+            @time prod = mult_poly_with_crt(p1, p2)
             # The number 105 is chosen below as the implementation of the CRT uses the primes 3,5 and 7 to calculate the product 
-            @assert leading(prod).coeff == smod(leading(p1mod.terms*p2mod.terms).coeff, 105)
-            @assert leading(prod).degree == leading(p1mod.terms*p2mod.terms).degree
+            @assert prod == p1 * p2 "Error: CRT does not net p1*p2"
         end
     end
     println("crt_benchmark COMPLETED\n")
@@ -155,7 +183,7 @@ end
 """
 Test derivative of polynomials (as well as product).
 """
-function prod_derivative_test_poly(;N::Int = 10^2,  seed::Int = 0)
+function prod_derivative_test_poly(;N::Int = 10^3,  seed::Int = 0)
     Random.seed!(seed)
     for _ in 1:N
         p1 = rand(Polynomial)
@@ -166,6 +194,28 @@ function prod_derivative_test_poly(;N::Int = 10^2,  seed::Int = 0)
     end
     println("prod_derivative_test_poly - PASSED")
 end
+
+"""
+Test derivative of polynomials modulo P (as well as product).
+"""
+function prod_derivative_test_poly_mod_p(;N::Int = 10^3,  seed::Int = 0)
+    Random.seed!(seed)
+    sample_primes_array = [3,5,7,11,13,17,19]
+    for _ in 1:N
+        rand_prime = rand(sample_primes_array)
+        p1 = rand(Polynomial)
+        p2 = rand(Polynomial)
+        p1mod = PolynomialModP(p1, rand_prime)
+        p2mod = PolynomialModP(p2, rand_prime)
+        p1d = derivative(p1)
+        p2d = derivative(p2)
+        p1mod_d = PolynomialModP(p1d, rand_prime)
+        p2mod_d = PolynomialModP(p2d, rand_prime)
+        @assert mod((p1d*p2) + (p1*p2d), rand_prime) == mod(derivative(p1mod.terms*p2mod.terms), rand_prime)
+    end
+    println("prod_derivative_test_poly_mod_p - PASSED")
+end
+
 
 
 """
@@ -214,7 +264,7 @@ end
 """
 Test division of polynomials modulo p using PolynomialModP data type.
 """
-function division_test_poly_mod_p(;prime::Int = 101, N::Int = 10^4, seed::Int = 0)
+function division_test_poly_mod_p(;prime::Int = 101, N::Int = 10^3, seed::Int = 0)
     Random.seed!(seed)
     for _ in 1:N
         p1 = rand(Polynomial)

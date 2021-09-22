@@ -12,36 +12,7 @@ end
 x = x_poly()
 
 p1 = x^2 + x^5
-
-function testbed(p1, exponent, prime)
-    out = 1
-    for i in 1:exponent
-        out = mod(out*p1, prime)
-    end
-    return mod(out, prime)
-end
-
-@time lmao = testbed(p1, 50, 13)
-@time ^(p1, 50, 13)
-println(^(p1, 50, 13) - lmao)
-
 p2 = x^5 + x^3
-
-# Class example
-p1 = 3x + -4
-p2 = 6x + 5
-
-p1mod = PolynomialModP(p1, 5)
-p2mod = PolynomialModP(p2, 5)
-
-@show p1 * p2
-@show CRT(p1mod, p2mod)
-# p3 = x^8 + x^5
-# p1+p2
-# p1 * p2 + p3
-
-
-
 
 # println("To showcase some of the functions within this repo, we will use the two polynomials p1 = ", pretty_printer(p1), " and p2 = ", pretty_printer(p2), "\n")
 

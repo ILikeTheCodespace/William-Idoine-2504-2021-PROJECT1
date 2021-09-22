@@ -123,6 +123,9 @@ function show(io::IO, p::Polynomial)
     end
 end
 
+"""
+Show a polynomial Modulo P.
+"""
 function show(io::IO, p::PolynomialModP)
     p = deepcopy(p.terms)
     if iszero(p)

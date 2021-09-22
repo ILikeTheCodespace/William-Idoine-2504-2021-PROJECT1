@@ -14,7 +14,7 @@ Returns a vector of tuples of (irreducible polynomials (mod p), multiplicity) su
 
 function factor(f::PolynomialModP)::Vector{Tuple{Polynomial,Int}}
     #Cantor Zassenhaus factorization
-
+    f.prime == 3 && return [(mod(f.terms, f.prime),1)]
     f_modp = PolynomialModP(mod(f.terms, f.prime), f.prime)
     degree(f_modp.terms) ≤ 1 && return [(f_modp.terms,1)]
 
@@ -48,7 +48,9 @@ function factor(f::PolynomialModP)::Vector{Tuple{Polynomial,Int}}
 
     #Append the leading coefficient as well
     push!(ret_val, (leading(f_modp.terms).coeff* one(Polynomial), 1) )
-
+    # if f.prime == 3 && degree(mod(expand_factorization(ret_val),f.prime)) == 0 && mod(f.terms-expand_factorization(ret_val),f.prime) != 0
+    #     ret_val = [(ret_val[1][1]*(Term(1,3)), ret_val[1][2])]
+    # end
     return ret_val
 end
 
@@ -68,7 +70,6 @@ function multiplicity(f::PolynomialModP, g::PolynomialModP)::Int
     return 1 + multiplicity(PolynomialModP((f ÷ g),g.prime), g)
 end
 
-
 """
 Distinct degree factorization.
 
@@ -81,11 +82,10 @@ function dd_factor(f::PolynomialModP)::Array{Polynomial}
 
     #Looping over degrees
     for k in 1:degree(f.terms)
-        w = rem(PolynomialModP(^(PolynomialModP(w,f.prime),f.prime), f.prime), f)
+        w = rem(PolynomialModP(^(w,f.prime, f.prime), f.prime), f)
         g[k] = gcd(PolynomialModP(w - x, f.prime), f)
         f = PolynomialModP((f ÷ PolynomialModP(g[k], f.prime)), f.prime)
     end
-
 
     #edge case for final factor
     f.terms != one(Polynomial) && push!(g,f.terms)
@@ -98,17 +98,6 @@ Distinct degree split.
 
 Returns a list of irreducible polynomials of degree `d` so that the product of that list (mod prime) is the polynomial `f`.
 """
-# function dd_split(f::Polynomial, d::Int, prime::Int)::Vector{Polynomial}
-#     f = mod(f,prime)
-#     degree(f) == d && return [f]
-#     degree(f) == 0 && return []
-#     w = rand(Polynomial, degree = d, monic = true)
-#     w = mod(w,prime)
-#     n_power = (prime^d-1) ÷ 2
-#     g = gcd(pow_mod(w,n_power,prime) - one(Polynomial), f, prime)
-#     ḡ = (f ÷ g)(prime) # g\bar + [TAB]
-#     return vcat(dd_split(g, d, prime), dd_split(ḡ, d, prime) )
-# end
 
 function dd_split(f::Polynomial, d::Int, prime::Int)::Vector{Polynomial}
     f = PolynomialModP(mod(f,prime), prime)

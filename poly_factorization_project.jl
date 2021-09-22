@@ -7,7 +7,7 @@
 #############################################################################
 
 using DataStructures, Distributions, StatsBase, Random
-
+import Primes: nextprime, primes
 import Base: %
 import Base: push!, pop!, popfirst!, iszero, show, isless, map, map!, iterate, length, last
 import Base: +, -, *, mod, %, ÷, ==, ^, rand, rem, zero, one
