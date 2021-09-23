@@ -39,7 +39,6 @@ function ^(p::Polynomial, n::Int)
     n < 0 && error("No negative power")
     out = one(p)
     binary_arr = digits(n, base=2)
-    length(binary_arr) == 1 && return p*binary_arr[1]
     for i in 1:length(binary_arr)
         binary_arr[i] == 1 ? out = out*p : out *= 1
         p = p*p
@@ -52,7 +51,6 @@ function ^(p, n::Int, prime::Int)
     n < 0 && error("No negative power")
     out = one(p)
     binary_arr = digits(n, base=2)
-    length(binary_arr) == 1 && return p*binary_arr[1]
     p = mod(p, prime)
     for i in 1:length(binary_arr)
         binary_arr[i] == 1 ? out = mod(out*p, prime) : out *= 1

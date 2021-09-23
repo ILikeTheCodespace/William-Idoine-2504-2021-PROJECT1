@@ -172,7 +172,6 @@ function crt_benchmark(;N::Int = 50, seed::Int = 0)
         if i%10 == 0
             print("Time taken to multiply two polynomials with $i terms:")
             @time prod = mult_poly_with_crt(p1, p2)
-            # The number 105 is chosen below as the implementation of the CRT uses the primes 3,5 and 7 to calculate the product 
             @assert prod == p1 * p2 "Error: CRT does not net p1*p2"
         end
     end
