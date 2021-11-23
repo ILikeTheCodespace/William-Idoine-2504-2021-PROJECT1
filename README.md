@@ -1,4 +1,4 @@
-# 2504_2021_project1 - Polynomial Factorization
+# MATH2504 Polynomial Solver
 
 This is for [UQ's MATH2504 in Semester 2 2021](https://courses.smp.uq.edu.au/MATH2504/).
 
